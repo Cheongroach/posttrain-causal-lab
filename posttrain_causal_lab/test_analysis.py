@@ -258,6 +258,23 @@ class AnalysisContracts(unittest.TestCase):
         with self.assertRaisesRegex(analysis.AuditError, "decoding"):
             analysis.verify_generations(values, gold, self.tokenizer, [0], 256)
 
+    def test_vocabulary_size_is_cached_for_raw_token_validation(self):
+        class CountingTokenizer(FixtureTokenizer):
+            calls = 0
+
+            def __len__(self):
+                self.calls += 1
+                return super().__len__()
+
+        tokenizer = CountingTokenizer()
+        gold = [{"id": "x", "final_answer": "3"}, {"id": "y", "final_answer": "4"}]
+        values = make_generations(gold, tokenizer, 2)
+        analysis.verify_generations(values, gold, tokenizer, [0], 256)
+        self.assertEqual(tokenizer.calls, 1)
+        values[0]["token_ids"][0] = 999
+        with self.assertRaisesRegex(analysis.AuditError, "generation tokens"):
+            analysis.verify_generations(values, gold, tokenizer, [0], 256)
+
     def test_interventions_reject_duplicate_rows_and_unmatched_treatment(self):
         values = make_interventions(["x"], ["layer00.gdn"])
         with self.assertRaisesRegex(analysis.AuditError, "duplicate"):

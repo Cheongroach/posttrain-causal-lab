@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import decimal
 import hashlib
 import json
 import math
@@ -76,10 +77,11 @@ def check_summary(actual, expected, label):
 def verify_generations(rows, gold, tokenizer, eos_ids, budget):
     require([r["id"] for r in rows] == [r["id"] for r in gold],
             "Generation IDs/order differ or have duplicates")
+    vocabulary_size = len(tokenizer)
     for row, answer in zip(rows, gold):
         tokens = row["token_ids"]
         require(tokens and len(tokens) <= budget
-                and all(type(t) is int and 0 <= t < len(tokenizer) for t in tokens),
+                and all(type(t) is int and 0 <= t < vocabulary_size for t in tokens),
                 "Invalid generation tokens")
         require(row["output_tokens"] == len(tokens), "Output token count differs")
         require(not any(t in eos_ids for t in tokens[:-1]), "Generation continued after EOS")
@@ -536,27 +538,44 @@ def analyze(root):
 def report(result):
     effect = result["paired_effects"]["complete_numeric_correct"]
     lo, hi = effect["t95_across_seeds"]
+    indexed = {(c["seed"], c["arm"]): c for c in result["cells"]}
+    pooled = result["pooled_descriptives"]
+    shortened = pooled["opd32"]["rollouts"]["truncated"]
+    extended = pooled["opd256"]["rollouts"]["truncated"]
+    mixed = min(effect["values"]) < 0 < max(effect["values"])
+    conclusion = ("更长训练输出减少了截断，生成正确率的收益仍不确定。"
+                  if mixed else "训练输出预算与生成正确率的配对结果如下。")
+    def percentage_points(value):
+        rounded = decimal.Decimal(str(value*100)).quantize(
+            decimal.Decimal("0.01"), rounding=decimal.ROUND_HALF_UP)
+        return f"{rounded:+.2f}"
+
     text = [
         "# 24-H20 配对实验结果",
         "",
-        f"十二个 cell 的产物与数值门禁通过。OPD-256 相对 OPD-32 的完整数字正确率变化为"
-        f" {100 * effect['mean']:+.2f} 个百分点；三个 seed 的差值为 "
-        + "、".join(f"{100 * x:+.2f}" for x in effect["values"]) + " 个百分点。",
+        conclusion + f"OPD训练截断率从 {100*shortened:.2f}% 降至 {100*extended:.2f}%。"
+        f"在统一256-token贪心评测中，OPD-256相对OPD-32的完整数字正确率均值变化为"
+        f" {100*effect['mean']:+.2f} 个百分点；三个seed差值为 "
+        + "、".join(percentage_points(x) for x in effect["values"]) + " 个百分点。",
         "",
-        "![输出预算、验证质量和固定前缀干预](results.png)",
+        "![训练截断减少与验证正确率的seed波动](results.png)",
         "",
-        "图：每点代表一个 seed。质量评测统一使用贪心生成、256-token 上限；"
-        "干预分数为在 dev 选出的三个位置上，verification 平均 gold log-prob 下降，"
-        "单位 nats/token。右图 donor 与等 L2 随机扰动相减，不能解释为自由生成正确率差。",
+        "图1：每点代表一个seed，线连接同seed的两个条件，粗横线为均值。"
+        "左图使用256道训练题的采样记录；右图统一使用256-token上限、贪心生成与相同64道"
+        "verification题。点在横轴轻微错位以避免重叠；横轴只表示条件。图中没有置信区间条。",
         "",
-        "| 条件 | 完整数字正确率 | 数字正确率 | 格式有效率 | 评测截断率 | 平均输出 token |",
-        "|---|---:|---:|---:|---:|---:|",
+        "## 输出预算是否带来质量收益",
+        "",
+        "| Seed | OPD-32正确数／64 | OPD-256正确数／64 | 差值，百分点 | 训练截断率32→256 |",
+        "|---|---:|---:|---:|---:|",
     ]
-    for arm in ARMS:
-        m = result["pooled_descriptives"][arm]["verification"]
-        text.append(f"| {arm} | {100*m['complete_numeric_correct']:.2f}% | "
-                    f"{100*m['numeric_correct']:.2f}% | {100*m['format_valid']:.2f}% | "
-                    f"{100*m['truncated']:.2f}% | {m['output_tokens']:.2f} |")
+    for seed, delta in zip(SEEDS, effect["values"]):
+        short, long = indexed[seed, "opd32"], indexed[seed, "opd256"]
+        text.append(f"| {seed} | "
+                    f"{round(short['metrics']['trained_verification']['complete_numeric_correct']*64)} | "
+                    f"{round(long['metrics']['trained_verification']['complete_numeric_correct']*64)} | "
+                    f"{percentage_points(delta)} | {100*short['rollouts']['truncated']:.2f}% → "
+                    f"{100*long['rollouts']['truncated']:.2f}% |")
     text += [
         "",
         f"按三个配对 seed 计算的均值 t 区间为 [{100*lo:+.2f}, {100*hi:+.2f}] 个百分点"
@@ -564,10 +583,45 @@ def report(result):
         "各条件有 192 次评测，但独立 verification 题目只有 64 道；"
         "小 seed 数使该区间对分布假设敏感。",
         "",
+        f"统一评测中的截断率均值为OPD-32 "
+        f"{100*pooled['opd32']['verification']['truncated']:.2f}%、OPD-256 "
+        f"{100*pooled['opd256']['verification']['truncated']:.2f}%。"
+        "训练采样截断减少，与训练后贪心生成的完成率，是两个不同结果。",
+        "",
+        "正确率是固定parser的数值代理：优先取最后一个`####`后数字，否则取文本中最后一个数字；"
+        "主要指标还要求模型EOS结束。原始token已重新解码并复算评分，未进行人工推理内容审核。"
+        "评分、格式与截断分开报告。",
+        "",
+        "| 条件 | 完整数字正确率 | 数字正确率 | 格式有效率 | 评测截断率 | 平均输出token |",
+        "|---|---:|---:|---:|---:|---:|",
+    ]
+    # The base is one deterministic evaluation repeated by the matrix.
+    baseline = result["cells"][0]["metrics"]["base_verification"]
+    for arm, m in [("Base", baseline)] + [
+            (arm, pooled[arm]["verification"]) for arm in ARMS]:
+        text.append(f"| {arm} | {100*m['complete_numeric_correct']:.2f}% | "
+                    f"{100*m['numeric_correct']:.2f}% | {100*m['format_valid']:.2f}% | "
+                    f"{100*m['truncated']:.2f}% | {m['output_tokens']:.2f} |")
+    rollout_tokens = {
+        arm: round(sum(c["rollouts"]["n"] * c["rollouts"]["output_tokens"] for c in result["cells"]
+                       if c["arm"] == arm)) for arm in ("opd32", "opd256")}
+    text += [
+        "",
+        "Base为同一个确定性底座评测，重复执行不增加独立样本。SFT／KD为参考条件，"
+        "本轮没有为四条件两两比较预设显著性检验。",
+        "",
         "该主对照衡量 32→256 输出预算改变后的完整 OPD 配方效果。"
-        "采样路径和监督 token 数也随之改变，不能据此隔离等 token 的优化收益。"
-        "评分按最后一个 `####` 数字、否则最后一个数字与官方答案比较；"
-        "主要指标还要求 EOS 完成。它是 parser 代理，没有人工审查推理过程。",
+        f"三个seed的采样／监督响应token合计为OPD-32 {rollout_tokens['opd32']:,}、"
+        f"OPD-256 {rollout_tokens['opd256']:,}。固定256步同时改变了采样路径和token量，"
+        "不能据此隔离等token预算下的优化收益。",
+        "",
+        "## 固定前缀上的计算干预",
+        "",
+        "![dev选址后verification上的底座donor与随机处理](interventions.png)",
+        "",
+        "图2：位置只在dev前8题选择；每点是某seed在64道verification题与3个选定位置上的"
+        "平均gold log-prob下降。底座donor和随机扰动的激活L2匹配。"
+        "正值表示相对训练后模型降低了标准答案token概率，单位nats/token。",
         "",
         "| Seed | 条件 | 训练 rollout 截断率 | 验证 donor−random，nats/token | dev 选出的模块 |",
         "|---|---|---:|---:|---|",
@@ -582,16 +636,28 @@ def report(result):
                  else f"尚不能完整确定；已闭合区间合计 {cost.get('known_closed_gpu_hours', 0):.3f} GPU·h")
     text += [
         "",
+        "十二个cell的donor−random平均差均为正，支持这些选定计算在固定标准答案前缀上的"
+        "干预效果。不同seed选出的位置可以不同；同范数随机方向只控制扰动强度，"
+        "没有保证两种处理的表示分布一致。",
+        "",
         "固定前缀 patching 测量的是指定内部计算对 gold token 概率的作用。"
         "底座 donor 与随机扰动在激活 L2 强度上匹配，位置只在 dev 搜索，"
         "verification 不参与选址。即使 donor 效果超过随机，也不能证明自由生成质量"
         "由相同模块介导，更不能识别训练信号的历史原因。",
+        "",
+        "## 执行、恢复与成本",
         "",
         "每 cell 完成 256 步、64 dev 和64 verification；"
         "dev 干预 1032 条、verification 干预448条；"
         "三个 Worker 各自重新运行13项 CPU门禁。"
         "复核包含16个冻结源文件、初始 adapter与样本顺序配对、checkpoint hash／有限性／游标、"
         "导出 adapter一致性、原始 token重新解码与评分，以及 dev-only top3选址。",
+        "",
+        f"十二组step128重放的adapter最大绝对误差为 "
+        f"{max(c['recovery']['adapter_max_abs'] for c in result['cells']):.3g}，"
+        f"loss最大绝对差为 {max(abs(c['recovery']['reference']['loss']-c['recovery']['replay']['loss']) for c in result['cells']):.3g}。"
+        f"干预identity最大logits绝对误差为 "
+        f"{max(c['verification_interventions']['identity_max_abs'] for c in result['cells']):.3g}。",
         "",
         "恢复为同进程固定前缀重放。完整 logits未归档，因此 identity与重放的逐元素"
         "相对容差依赖冻结源码中的运行时断言；离线复核只能再次检查保存的最大误差和标量。"
@@ -614,31 +680,62 @@ def render(result, root):
     import matplotlib.pyplot as plt
     colors = {"sft": "#587ca6", "kd": "#7d799f", "opd32": "#ca7850", "opd256": "#428878"}
     indexed = {(c["seed"], c["arm"]): c for c in result["cells"]}
-    fig, axes = plt.subplots(1, 3, figsize=(12, 3.8), layout="constrained")
-    panels = (
-        ("Training rollout truncation", "Percent", ("opd32", "opd256"),
-         lambda c: 100 * c["rollouts"]["truncated"]),
-        ("Verification complete numeric accuracy", "Percent", ARMS,
-         lambda c: 100 * c["metrics"]["trained_verification"]["complete_numeric_correct"]),
-        ("Selected sites: donor minus random", "Gold log-prob drop (nats/token)", ARMS,
-         lambda c: c["verification_interventions"]["base_minus_random"]),
-    )
-    for ax, (title, ylabel, arms, value) in zip(axes, panels):
-        for x, arm in enumerate(arms):
+    markers = ("o", "s", "^")
+    fig, axes = plt.subplots(1, 2, figsize=(8.8, 4.1), layout="constrained")
+    for ax, title, value in (
+            (axes[0], "A  Training rollout truncation", lambda c: 100*c["rollouts"]["truncated"]),
+            (axes[1], "B  Verification complete numeric accuracy",
+             lambda c: 100*c["metrics"]["trained_verification"]["complete_numeric_correct"])):
+        for seed_index, (seed, marker) in enumerate(zip(SEEDS, markers)):
+            ys = [value(indexed[seed, arm]) for arm in ("opd32", "opd256")]
+            offset = (seed_index-1)*.055
+            ax.plot([offset, 1+offset], ys, color="#a7adb2", lw=1.1, zorder=1)
+            for x, arm, y in zip((0, 1), ("opd32", "opd256"), ys):
+                ax.scatter(x+offset, y, color=colors[arm], marker=marker, s=55, zorder=3)
+        for x, arm in enumerate(("opd32", "opd256")):
             ys = [value(indexed[seed, arm]) for seed in SEEDS]
-            ax.scatter([x-.08, x, x+.08], ys, color=colors[arm], s=35, zorder=3)
-            ax.plot([x-.18, x+.18], [statistics.mean(ys)]*2, color=colors[arm], lw=2)
-        ax.set_xticks(range(len(arms)), [arm.upper() for arm in arms])
-        ax.set_title(title, fontsize=10)
-        ax.set_ylabel(ylabel, fontsize=9)
+            ax.plot([x-.13, x+.13], [statistics.mean(ys)]*2, color=colors[arm], lw=2.5)
+        ax.set_xticks([0, 1], ["OPD-32", "OPD-256"])
+        ax.set_xlim(-.35, 1.35)
+        ax.set_ylim(0, 100)
+        ax.set_title(title, fontsize=10, loc="left")
+        ax.set_ylabel("Percent", fontsize=9)
         ax.spines[["top", "right"]].set_visible(False)
         ax.grid(axis="y", alpha=.18)
-    axes[0].set_ylim(-3, 103)
-    axes[1].set_ylim(-3, 103)
-    axes[2].axhline(0, color="#666", lw=.7)
-    fig.suptitle("Qwen3.5 4B/9B · 256 updates · 3 paired seeds · 64 fixed verification cases", fontsize=11)
+    handles = [plt.Line2D([], [], color="#777", marker=marker, linestyle="",
+                          label=f"seed {seed}") for seed, marker in zip(SEEDS, markers)]
+    axes[0].legend(handles=handles, frameon=False, fontsize=8, loc="upper right")
+    baseline = 100*result["cells"][0]["metrics"]["base_verification"]["complete_numeric_correct"]
+    axes[1].axhline(baseline, color="#777", lw=.8, ls="--")
+    axes[1].text(.98, baseline+2, f"base {baseline:.1f}%", ha="right", fontsize=8, color="#555")
+    fig.suptitle("Qwen3.5 4B/9B · 256 updates per cell · 3 paired seeds", fontsize=11)
+    fig.supxlabel("Training: 256 fixed cases     |     Verification: 64 fixed cases, 256-token greedy", fontsize=8)
     for extension in ("png", "svg"):
         fig.savefig(root / ("results." + extension), dpi=180)
+    plt.close(fig)
+    fig, ax = plt.subplots(figsize=(8.8, 4.1), layout="constrained")
+    for x, arm in enumerate(ARMS):
+        for seed_index, (seed, marker) in enumerate(zip(SEEDS, markers)):
+            cell = indexed[seed, arm]["verification_interventions"]
+            offset = (seed_index-1)*.035
+            xs = [x-.16+offset, x+.16+offset]
+            ys = [cell["base_drop"], cell["random_drop"]]
+            ax.plot(xs, ys, color=colors[arm], lw=.8, alpha=.45)
+            ax.scatter(xs, ys, color=colors[arm], marker=marker, s=43, zorder=3)
+        for offset, field in ((-.16, "base_drop"), (.16, "random_drop")):
+            mean = statistics.mean(indexed[seed, arm]["verification_interventions"][field] for seed in SEEDS)
+            ax.plot([x+offset-.075, x+offset+.075], [mean, mean], color=colors[arm], lw=2.5)
+    ax.set_xticks(range(4), [arm.upper()+"\ndonor   random" for arm in ARMS], fontsize=9)
+    ax.set_ylabel("Gold log-prob drop (nats/token)", fontsize=10)
+    ax.axhline(0, color="#777", lw=.8, ls="--")
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.grid(axis="y", alpha=.18)
+    ax.legend(handles=handles, frameon=False, ncols=3, fontsize=8, loc="lower left",
+              bbox_to_anchor=(0, 1.01), borderaxespad=0)
+    fig.suptitle("Gold-prefix intervention at dev-selected sites", fontsize=11, x=.02, ha="left")
+    fig.supxlabel("3 sites selected on 8 dev cases · verified on 64 fixed cases · activation L2 matched", fontsize=8)
+    for extension in ("png", "svg"):
+        fig.savefig(root / ("interventions." + extension), dpi=180)
     plt.close(fig)
 
 

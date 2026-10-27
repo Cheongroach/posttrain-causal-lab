@@ -1,6 +1,6 @@
 # PostTrain Causal Lab: code branch
 
-本分支保存 A0 和后续24-H20配对实验的可移植核心实现。A0已完成工程验证；24卡矩阵已提交排队，尚无该轮模型实测结果。
+本分支保存A0和24-H20配对实验的可移植核心实现。两轮均已完成执行验证；24卡独立复核显示训练截断减少，完整数字正确率的预算收益仍不确定。详见 [`manuscript`实测报告](https://github.com/Cheongroach/posttrain-causal-lab/blob/manuscript/experiments/scale24-20261027/REPORT.md)。
 
 ```text
 posttrain_causal_lab/
@@ -37,7 +37,7 @@ python -m unittest \
   posttrain_causal_lab.test_analysis -v
 ```
 
-共19项检查：前13项覆盖微型Qwen3.5与训练／干预契约，后6项使用临时合成归档验证分析器。合成矩阵包含完整12个cell布局及已知配对差值，所有夹具位于系统临时目录；不下载4B／9B权重或GSM8K，也不证明真实GPU路径。
+共20项检查：前13项覆盖微型Qwen3.5与训练／干预契约，后7项使用临时合成归档验证分析器，包含固定词表大小缓存的回归检查。合成矩阵包含完整12个cell布局及已知配对差值，所有夹具位于系统临时目录；不下载4B／9B权重或GSM8K，也不证明真实GPU路径。
 
 ## 重建冻结数据
 
@@ -66,7 +66,7 @@ python -m posttrain_causal_lab.scale24_worker \
 
 Worker索引分别为0、1、2，各自使用相应seed。每个子进程独占两张H20，执行生成评测、训练状态重放、dev全层搜索和verification固定选址干预。主比较是OPD-256−32，统一256-token贪心评测；192次评测复用同一64题，不能按192道独立题统计。
 
-`analyze_scale24.py`复核该冻结运行的源包、归档、checkpoint、raw-token评分、选址与配对状态，通过后生成`analysis.json`、`REPORT.md`和PNG／SVG。它需要原始归档目录与来源索引；本仓库没有分发这些大体积产物。输出图表还需视觉与科学复核。
+`analyze_scale24.py`复核该冻结运行的源包、归档、checkpoint、raw-token评分、选址与配对状态，通过后生成`analysis.json`、`REPORT.md`和两组PNG／SVG。本轮已完成这些门禁及图表视觉和科学复核。脚本把固定词表大小缓存一次，避免逐token重复构造。本仓库发布精简机读结果与图表，没有分发原始大体积归档。
 
 ## 阅读顺序
 
