@@ -1,0 +1,32 @@
+{
+  "audit_passed": true,
+  "workers_completed": 3,
+  "cells_completed": 12,
+  "train_steps": 3072,
+  "unique_split_cases": {
+    "train": 256,
+    "dev": 64,
+    "verification": 64
+  },
+  "runtime_versions": {
+    "torch": "2.9.1",
+    "transformers": "5.2.0",
+    "peft": "0.18.1",
+    "tokenizers": "0.22.2"
+  },
+  "source_files_verified": 16,
+  "worker_cpu_checks_each": 13,
+  "initial_adapter_and_rng_paired": true,
+  "checkpoint_hash_finiteness_cursor_and_export_verified": true,
+  "raw_token_decoding_and_grading_reproduced": true,
+  "dev_selection_reproduced": true,
+  "dev_intervention_records": 12384,
+  "verification_intervention_records": 5376,
+  "identity_max_abs": 0.0,
+  "recovery_adapter_max_abs": 0.0,
+  "recovery_loss_max_abs": 0.0,
+  "allocated_gpu_hours": 32.82222222222222,
+  "cost_all_attempts_complete": true,
+  "historical_train_signal_intervention": false,
+  "human_reasoning_audit": false
+}

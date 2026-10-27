@@ -1,0 +1,60 @@
+{
+  "reviewed_at_utc": "2026-10-27T18:37:42.868868+00:00",
+  "frozen_worker_source_sha256": "aa32b34506aa9be8d1f7d6255f1300469e79fcc83a911965d2f4dedbaac57783",
+  "preregistered_analysis": {
+    "registered_at_utc": "2026-10-27T14:56:40.283005+00:00",
+    "execution_evidence_available": false,
+    "source_sha256": "aa32b34506aa9be8d1f7d6255f1300469e79fcc83a911965d2f4dedbaac57783",
+    "files": {
+      "analyze_scale24.py": "e3828bbe3ac4ef9ba87634086fa96a3f2063695e88f67b6dd899ab9d817852c5",
+      "test_analysis.py": "7b57585c27404043ef4aff61c866b79fe393b68b8d2a674c42e15b44f497e0ed",
+      "ops/collect_scale24.py": "7e89257a1c59278d2a2d3470ff44da3820723a9716f2722860ba06665e0c0713",
+      "ops/watch_scale24.py": "51d6620afb50afe66bceefe59da2b46993254ef6d780a45fe50eef1779c79e98"
+    },
+    "primary_pair": [
+      "opd256",
+      "opd32"
+    ],
+    "primary_metric": "complete_numeric_correct",
+    "paired_seeds": 3,
+    "unique_verification_cases": 64,
+    "interval": "mean +/- t(0.975,df=2) * seed SD / sqrt(3)",
+    "random_l2_tolerance": {
+      "atol": 1e-05,
+      "rtol": 1e-05
+    },
+    "report_review_pending": true,
+    "queue_snapshot_at_utc": "2026-10-27T14:55:12.272040+00:00"
+  },
+  "analysis_script_sha256": "c26165d9178428da70224fe7c5b5c425936b9eedfed84dec89865e79daa20940",
+  "post_collection_changes": [
+    "Safe manual tar extraction replaces unavailable Python filter keyword",
+    "Cache immutable tokenizer vocabulary size once; token bounds unchanged",
+    "Split figures, connect paired seeds, clarify evaluation versus training truncation"
+  ],
+  "gpu_trials_rerun_for_analysis_fixes": false,
+  "statistical_rules_changed": false,
+  "archives": [
+    {
+      "worker": 0,
+      "sha256": "b2e6575c3efcc2c734af8e879a88f22e9166191c21e5bd1e8872796d47542fa8",
+      "bytes": 1441156360
+    },
+    {
+      "worker": 1,
+      "sha256": "5b1c34678923b3f3fec5ef3350732590494abf6b9071b3339116b1de12912b43",
+      "bytes": 1441016060
+    },
+    {
+      "worker": 2,
+      "sha256": "6f3d160f8b86b953463ee2769325814486cf1df0524e30044fca900326754698",
+      "bytes": 1441065840
+    }
+  ],
+  "visual_review": "Both real-data figures rendered and inspected; legend and overlapping markers corrected",
+  "editing_passes": [
+    "science_and_evidence",
+    "reading_order",
+    "language_and_redundancy"
+  ]
+}

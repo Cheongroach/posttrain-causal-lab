@@ -48,13 +48,15 @@ OPD-256−32是生成上限改变后的整体配方效果；路径、截断与�
 
 成本按所有trial、所有Pod的schedule→stop记录累加，每Pod8卡。准备、训练、额外恢复诊断和归档均计入；排队不计入。缺失stop时间则标记成本不完整，不用cell耗时或72 GPU·h上限替代。无started_at、无Pod且终态的原trial支持“无已记录分配”的判断；不能仅凭stopped字符串认定零成本。
 
-观察器的当前快照在 运行目录的STATUS.md。终态通过后生成 `audit.json`、`analysis.json`、`REPORT.md` 和 `results.png/svg`；重要科研图须实际打开检查，报告再按科学证据、理解顺序、语言冗余完成三轮编辑。失败时写 `audit.json` 的明确错误，不生成成功报告。
+终态已完成独立复核，见 [REPORT.md](REPORT.md)、[analysis.json](analysis.json) 和 [audit.json](audit.json)。两张实测图分别记录预算比较与固定前缀干预，已实际渲染、打开检查，修正图例遮挡和点重叠；报告按科学证据、理解顺序、语言冗余完成三轮编辑。
 
-手动复核入口：
+手动复核需要原始归档、源包及来源索引。本仓库保存定稿报告与精简证据，原始大体积归档没有公开；入口为：
 
 ```bash
 python -m posttrain_causal_lab.analyze_scale24 \
-  --experiment posttrain_causal_lab/experiments/scale24-20261027
+  --experiment /path/to/raw/scale24-20261027
 ```
 
-本地6项分析检查使用临时合成数据，覆盖完整矩阵的已知配对效果，以及缺失Worker、raw token／评分不一致、重复干预、L2失配、checksum合法但含NaN的checkpoint与不完整成本记录。它们检验分析器的拒绝条件，不能代替实际训练结果。
+本地7项分析检查使用临时合成数据，覆盖完整矩阵的已知配对效果，以及缺失Worker、raw token／评分不一致、重复干预、L2失配、checksum合法但含NaN的checkpoint、不完整成本记录和词表大小缓存。它们检验分析器的拒绝条件，不能代替实际训练结果。
+
+回收后的两处修订属于本地分析：安全地逐文件解包，兼容未提供tar过滤参数的Python；把固定词表大小缓存一次，避免逐token重复构造。原来的Worker包、采样记录、评分规则、随机强度容差和配对统计保持不变，分析计划原文件仍保留。来源哈希与修订记录见 [reproducibility.json](reproducibility.json)。

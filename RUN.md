@@ -62,4 +62,6 @@ Transformers 5.2 的 `apply_chat_template(..., tokenize=True)` 默认返回 `Bat
 
 A0的四个OPD rollout全部触及32-token上限。本次预先指定OPD-256 vs OPD-32，检验输出预算对截断和完整数字正确率的影响。直接从2卡扩大到24卡，采用3个配对seed、4个条件、每cell独占2卡的矩阵；学生仍为4B、教师仍为9B。
 
-设置见 [24-H20 PROTOCOL.md](experiments/scale24-20261027/PROTOCOL.md)。当前已提交排队，没有该轮实测结果。终态须通过 [分析门禁](experiments/scale24-20261027/ANALYSIS.md) 后再报告；A0的工程结论保持原适用范围。
+该轮已完成：三Worker退出0，12个cell各256步，三份归档、checkpoint、raw token评分、配对状态与选址均通过独立复核。恢复和identity保存的最大误差为0，实际分配32.82 GPU·h。
+
+结果见 [24-H20 REPORT.md](experiments/scale24-20261027/REPORT.md)。OPD-256降低训练截断，验证正确率差的seed方向不一致，均值+4.69个百分点的区间跨0。设置见 [PROTOCOL.md](experiments/scale24-20261027/PROTOCOL.md)，复核与离线兼容性修订见 [ANALYSIS.md](experiments/scale24-20261027/ANALYSIS.md)。A0的工程结论保持原适用范围。
