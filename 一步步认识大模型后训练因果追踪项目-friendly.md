@@ -167,16 +167,16 @@ prompt → token 概率 → 生成回答
 
 A0 的 KD 和 OPD 使用：
 
-\[
+$$
 \mathrm{KL}(p_T\Vert p_S)
 =\sum_v p_T(v)\log\frac{p_T(v)}{p_S(v)}
-\]
+$$
 
-其中 \(p_T\) 是教师分布，\(p_S\) 是学生分布，\(v\) 遍历完整词表。
+其中 $p_T$ 是教师分布，$p_S$ 是学生分布，$v$ 遍历完整词表。
 
 训练会降低教师分布到学生分布的 KL。这个方向不能随意交换，因为 KL 不对称。
 
-只记住：**项目明确优化 \(\mathrm{KL}(teacher\Vert student)\)。**
+只记住：**项目明确优化 $\mathrm{KL}(teacher\Vert student)$。**
 
 停下来回答：把 teacher 和 student 的位置交换后，还是同一个目标吗？
 
@@ -275,15 +275,15 @@ LoRA-OPD
 
 ### 第 13 步：LoRA 给原矩阵增加低秩更新
 
-对原权重 \(W\)，LoRA 不直接训练整个 \(W\)，而是加入：
+对原权重 $W$，LoRA 不直接训练整个 $W$，而是加入：
 
-\[
+$$
 W' = W + \frac{\alpha}{r}BA
-\]
+$$
 
-其中 \(A\) 和 \(B\) 是较小矩阵，\(r\) 是 rank。
+其中 $A$ 和 $B$ 是较小矩阵，$r$ 是 rank。
 
-底座 \(W\) 保持冻结，训练只修改 \(A\) 和 \(B\)。
+底座 $W$ 保持冻结，训练只修改 $A$ 和 $B$。
 
 只记住：**LoRA 用小矩阵表示权重增量。**
 
@@ -341,7 +341,7 @@ A0 观察到三个分支的 adapter 元素都发生了变化。
 
 请闭卷解释：
 
-1. \(W\)、\(A\)、\(B\) 分别是什么。
+1. $W$、$A$、$B$ 分别是什么。
 2. attachment site 为什么必须保存。
 3. 关闭 adapter 能回答什么，不能回答什么。
 
@@ -732,10 +732,10 @@ teacher：16.76 GiB
 
 A0 Pod 从 schedule 到 stop 共 392 秒，使用 2 张卡：
 
-\[
+$$
 C_{\mathrm{GPU}}=2\times\frac{392}{3600}
 \approx0.218\ \mathrm{GPU\cdot h}
-\]
+$$
 
 这个口径包含容器准备、模型复制、运行和归档，不包含排队。
 
