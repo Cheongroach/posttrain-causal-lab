@@ -23,9 +23,9 @@
 
 固定前缀 KD 与学生前缀 OPD 均优化完整词表的
 
-\[
+$$
 \mathrm{KL}(p_{\mathrm{teacher}}\Vert p_{\mathrm{student}})
-\]
+$$
 
 温度为 1，按有效响应 token 平均；教师及当轮生成序列停止梯度。SFT 使用相同响应边界的 CE。首个 EOS 被监督，后续 padding 被排除。生成触及预算时记录 `truncated`，不按正常完成计入质量。
 

@@ -113,7 +113,7 @@ OPD 退化论文分析的是带特定梯度估计、clipping 和 reference regul
 
 教师与学生只在输出分布上连接。大小不同的教师隐藏状态不能直接移入学生；跨 checkpoint 激活替换仅在学生自身的同架构训练轨迹间进行。4B、9B、27B 的模型卡均列出 padded 输出词表 248320，但相同维度不足以证明 token 对齐：启动时核对完整 token→ID 映射、特殊 token、词表输出维度与实际渲染模板。当前 GKD 源码只做 vocab_size 检查，仍需补充这一门禁。<a href="#s24">[cite:24]</a><a href="#s25">[cite:25]</a><a href="#s29">[cite:29]</a><a href="#s28">[cite:28]</a>
 
-所有 student 分支从相同 \(\theta_0\) 出发，保持相同 LoRA attachment sites、初始化、rank、precision 和优化器。拟议初始 rank 为 16，先适配 Gated Attention 输出投影、GDN 输出投影及 dense FFN down 投影；模块路径通过实际模型结构枚举后冻结，不套用 Qwen2.5 的 q／v attachment 假设。首轮冻结视觉编码器、embedding、lm_head 和 MTP；这是文本后训练范围，实际加载容量仍包含完整 checkpoint 的相关开销。
+所有 student 分支从相同 $\theta_0$ 出发，保持相同 LoRA attachment sites、初始化、rank、precision 和优化器。拟议初始 rank 为 16，先适配 Gated Attention 输出投影、GDN 输出投影及 dense FFN down 投影；模块路径通过实际模型结构枚举后冻结，不套用 Qwen2.5 的 q／v attachment 假设。首轮冻结视觉编码器、embedding、lm_head 和 MTP；这是文本后训练范围，实际加载容量仍包含完整 checkpoint 的相关开销。
 
 Qwen3.5／3.8 默认支持 thinking，Qwen3.8 还提供 reasoning effort 等控制。执行一致性 pilot 先用固定 non-thinking 短输出协议；正式数学能力分支单独冻结 thinking 模式与输出预算，不将两种模式混在同一质量比较中。短输出通过只说明该协议可运行，不能替代长推理质量验证。<a href="#s24">[cite:24]</a><a href="#s29">[cite:29]</a>
 
@@ -185,38 +185,38 @@ student 与 teacher 的 precision 分别冻结。先校验 FP32 参考路径，�
 
 ### 固定前缀上的激活替换
 
-定义 \(\theta_a,\theta_b\) 为同底座学生的两个 checkpoint；\(x\) 为相同 prompt，\(y_{<t}\) 为相同固定前缀。\(h_{\ell,p}^{a}\) 和 \(h_{\ell,p}^{b}\) 分别是指定层 \(\ell\)、token 位置 \(p\) 和指定 hook site 上的激活。
+定义 $\theta_a,\theta_b$ 为同底座学生的两个 checkpoint；$x$ 为相同 prompt，$y_{<t}$ 为相同固定前缀。$h_{\ell,p}^{a}$ 和 $h_{\ell,p}^{b}$ 分别是指定层 $\ell$、token 位置 $p$ 和指定 hook site 上的激活。
 
-受体模型执行 \(\theta_a\)，在该位置做：
+受体模型执行 $\theta_a$，在该位置做：
 
-\[
+$$
 h_{\ell,p}^{\mathrm{patch}}
 =h_{\ell,p}^{a}+\gamma\left(h_{\ell,p}^{b}-h_{\ell,p}^{a}\right),
 \qquad \gamma\in[0,1].
-\]
+$$
 
 其余计算由受体继续完成。固定 token IDs、attention mask、position IDs、completion mask 和 hook 的输入／输出语义。自由生成产生的不同 token 序列不能按相同绝对下标直接替换；固定前缀的条件预测与重新生成完整答案的行为变化分开报告。
 
 对于冻结的偏好对，主要连续分数可定义为：
 
-\[
+$$
 M(\theta;x,y^+,y^-)
 =\log p_\theta(y^+\mid x)-\log p_\theta(y^-\mid x).
-\]
+$$
 
 只对 completion 求和，单位为 nats。另报告按各自 completion token 数归一化后的 margin；它是不同指标，不替换训练中原始 DPO 目标。对最终数字、JSON 格式等目标，使用各自独立的判分函数，不能统一简化成一个偏好分数。
 
 在同一组验证样本上报告：
 
-\[
+$$
 \Delta_{\mathrm{train}}
 =\mathbb{E}\!\left[M(\theta_b)-M(\theta_a)\right],
 \qquad
 \Delta_{\ell,p}^{\mathrm{patch}}
 =\mathbb{E}\!\left[M(\theta_{a\leftarrow b,\ell,p})-M(\theta_a)\right].
-\]
+$$
 
-主报告使用有符号差值及置信区间。只有总训练差异稳定远离零时，才辅助给出恢复比 \(\Delta_{\ell,p}^{\mathrm{patch}}/\Delta_{\mathrm{train}}\)；比值可以为负或超过 1，不截断成“贡献百分比”，也不能将各层比值相加。
+主报告使用有符号差值及置信区间。只有总训练差异稳定远离零时，才辅助给出恢复比 $\Delta_{\ell,p}^{\mathrm{patch}}/\Delta_{\mathrm{train}}$；比值可以为负或超过 1，不截断成“贡献百分比”，也不能将各层比值相加。
 
 整层残差包含上游计算。某层替换恢复了行为，并不证明改变起源于该层。粗定位后应测试 attention／MLP 输出、局部 adapter 更新和必要的路径干预，逐步检查上游传递与本地更新的区别。<a href="#s5">[cite:5]</a><a href="#s6">[cite:6]</a>
 
@@ -244,51 +244,51 @@ MoE 分支还需记录 routed expert IDs、router 分布和 shared expert 路径
 
 对线性层，定义：
 
-\[
+$$
 W_\ell^{(s)}=W_\ell^{(0)}+\Delta W_\ell^{(s)},
 \qquad
 \Delta W_\ell^{(s)}=\frac{\alpha_{\mathrm{LoRA}}}{r}B_\ell^{(s)}A_\ell^{(s)}.
-\]
+$$
 
-\(W\) 布局为 \([d_{\mathrm{out}},d_{\mathrm{in}}]\)，\(B\) 为 \([d_{\mathrm{out}},r]\)，\(A\) 为 \([r,d_{\mathrm{in}}]\)。推理关闭 dropout 后，模块干预可以是 \(\Delta W_\ell\mapsto\gamma_\ell\Delta W_\ell\)。训练模式中的 dropout 与其他 LoRA 变体必须另行定义，不能套用相同等价性。<a href="#s1">[cite:1]</a><a href="#s21">[cite:21]</a>
+$W$ 布局为 $[d_{\mathrm{out}},d_{\mathrm{in}}]$，$B$ 为 $[d_{\mathrm{out}},r]$，$A$ 为 $[r,d_{\mathrm{in}}]$。推理关闭 dropout 后，模块干预可以是 $\Delta W_\ell\mapsto\gamma_\ell\Delta W_\ell$。训练模式中的 dropout 与其他 LoRA 变体必须另行定义，不能套用相同等价性。<a href="#s1">[cite:1]</a><a href="#s21">[cite:21]</a>
 
-普通 LoRA 的原始 latent 编号没有唯一语义。对任意可逆 \(R\)，\(BA=(BR^{-1})(RA)\)；同一函数可由不同 latent 坐标表示。因此不能直接把“第 7 个 LoRA 维度”命名为某个概念并跨 seed 比较。TopKLoRA 通过非线性与稀疏约束改变了这一情况，但它也改变了模型族，应当作为后续 baseline。<a href="#s11">[cite:11]</a>
+普通 LoRA 的原始 latent 编号没有唯一语义。对任意可逆 $R$，$BA=(BR^{-1})(RA)$；同一函数可由不同 latent 坐标表示。因此不能直接把“第 7 个 LoRA 维度”命名为某个概念并跨 seed 比较。TopKLoRA 通过非线性与稀疏约束改变了这一情况，但它也改变了模型族，应当作为后续 baseline。<a href="#s11">[cite:11]</a>
 
-第一版分析完整更新 \(\Delta W\) 的奇异子空间，或者在冻结归因数据上分析 adapter 输出的子空间。保留选定子空间后重新运行模型，比较与同 rank、同 Frobenius norm 的随机子空间。重复或接近的奇异值会使单个奇异向量不稳定，应比较子空间、主角度和效果稳定性；方差大或奇异值大本身不证明因果重要。
+第一版分析完整更新 $\Delta W$ 的奇异子空间，或者在冻结归因数据上分析 adapter 输出的子空间。保留选定子空间后重新运行模型，比较与同 rank、同 Frobenius norm 的随机子空间。重复或接近的奇异值会使单个奇异向量不稳定，应比较子空间、主角度和效果稳定性；方差大或奇异值大本身不证明因果重要。
 
-候选集合 \(S\) 的两个不同检验是：
+候选集合 $S$ 的两个不同检验是：
 
-\[
+$$
 E_{\mathrm{remove}}(S)
 =\mathbb{E}\!\left[M(\theta_s)-M(\theta_s\setminus S)\right],
 \qquad
 E_{\mathrm{retain}}(S)
 =\mathbb{E}\!\left[M(\theta_0\oplus S)-M(\theta_0)\right].
-\]
+$$
 
-\(\theta_s\setminus S\) 表示移除这些更新，\(\theta_0\oplus S\) 表示在初始模型只保留这些更新。前者是必要性证据，后者是充分性证据，均依赖任务和其他组件。存在冗余与交互时，两者不会一致；不要求找到唯一或严格最小回路。
+$\theta_s\setminus S$ 表示移除这些更新，$\theta_0\oplus S$ 表示在初始模型只保留这些更新。前者是必要性证据，后者是充分性证据，均依赖任务和其他组件。存在冗余与交互时，两者不会一致；不要求找到唯一或严格最小回路。
 
 ### OPD 中的学习信号
 
-第一版 GKD 定义固定当轮 rollout policy \(\bar\theta\)，由它生成 \(y\)。在前缀 \((x,y_{<t})\) 上优化教师与当前 student 分布的差异：
+第一版 GKD 定义固定当轮 rollout policy $\bar\theta$，由它生成 $y$。在前缀 $(x,y_{<t})$ 上优化教师与当前 student 分布的差异：
 
-\[
+$$
 \mathcal{L}_{\mathrm{OPD}}(\theta;\bar\theta)
 =\mathbb{E}_{x,\;y\sim p_{\bar\theta}(\cdot\mid x)}
 \left[
 \frac{1}{|y|}\sum_t
 D\!\left(p_T(\cdot\mid x,y_{<t}),p_\theta(\cdot\mid x,y_{<t})\right)
 \right].
-\]
+$$
 
 这是按 sequence 平均的一个明确定义。实际实现若使用全 batch 有效 completion token 平均，必须将归一化写入配置；变长序列和 gradient accumulation 下，两种定义不同。采样分布在当轮更新中停止梯度，后续重新采样；这是原 GKD 的关键约定。<a href="#s2">[cite:2]</a><a href="#s28">[cite:28]</a>
 
-首先选择 forward KL，即 \(D_{\mathrm{KL}}(p_T\|p_\theta)\)，将 prefix 分布效应与散度效应分开。若改为 reverse KL，\(D_{\mathrm{KL}}(p_\theta\|p_T)\)，在固定前缀上有：
+首先选择 forward KL，即 $D_{\mathrm{KL}}(p_T\|p_\theta)$，将 prefix 分布效应与散度效应分开。若改为 reverse KL，$D_{\mathrm{KL}}(p_\theta\|p_T)$，在固定前缀上有：
 
-\[
+$$
 D_{\mathrm{KL}}(p_\theta\|p_T)
 =-\mathbb{E}_{a\sim p_\theta}\log p_T(a)-H(p_\theta).
-\]
+$$
 
 这一恒等式解释了教师 log-prob 与熵的角色。它不证明任何具体教师的信号可靠，也不包含训练期间前缀分布变化的全部影响。sampled-token、full-vocabulary、clipped surrogate 和 reference-KL 配方分别标注。<a href="#s12">[cite:12]</a>
 
@@ -300,34 +300,34 @@ D_{\mathrm{KL}}(p_\theta\|p_T)
 
 人类偏好分支保留两条不同路径。DPO 直接使用冻结偏好对：
 
-\[
+$$
 \mathcal{L}_{\mathrm{DPO}}
 =-\mathbb{E}\log\sigma\!\left(
 \beta_{\mathrm{DPO}}\,[M(\theta)-M(\theta_{\mathrm{ref}})]
 \right).
-\]
+$$
 
-这里的 \(M\) 是同一偏好对的 completion log-prob margin。这个训练信号相对 reference 而定义；它不要求显式奖励模型。诊断时同时记录 chosen 与 rejected 的绝对 log-prob，避免把 rejected 概率下降误写成 chosen 内容能力提高。<a href="#s4">[cite:4]</a><a href="#s22">[cite:22]</a>
+这里的 $M$ 是同一偏好对的 completion log-prob margin。这个训练信号相对 reference 而定义；它不要求显式奖励模型。诊断时同时记录 chosen 与 rejected 的绝对 log-prob，避免把 rejected 概率下降误写成 chosen 内容能力提高。<a href="#s4">[cite:4]</a><a href="#s22">[cite:22]</a>
 
 经典 RLHF 先用人类偏好拟合奖励模型，例如 Bradley–Terry 损失：
 
-\[
+$$
 \mathcal{L}_{\mathrm{RM}}(\phi)
 =-\mathbb{E}\log\sigma\!\left[
 r_\phi(x,y^+)-r_\phi(x,y^-)
 \right].
-\]
+$$
 
 然后让策略最大化奖励并限制相对 reference 的偏离。一个明确的目标为：
 
-\[
+$$
 J(\theta)=
 \mathbb{E}_{x,\;y\sim p_\theta(\cdot\mid x)}
 \left[
 r_\phi(x,y)
 -\kappa\log\frac{p_\theta(y\mid x)}{p_{\mathrm{ref}}(y\mid x)}
 \right].
-\]
+$$
 
 PPO 通过旧策略概率比、advantage 和 clipping 近似实施策略更新，value model 参与信用分配。应区分终点 RM score、token KL penalty、advantage 和实际梯度；它们不是同一个“奖励”。<a href="#s3">[cite:3]</a><a href="#s23">[cite:23]</a><a href="#s26">[cite:26]</a>
 
@@ -408,25 +408,25 @@ OPD 每条样本还需记录生成时的 student 版本与更新时的 student �
 | Qwen3-235B-A22B | 约 470 | 2～4 张 96GB H20 的总 HBM 低于单份 BF16 语言权重容量 <a href="#s32">[cite:32]</a> |
 | Qwen3.5-397B-A17B | 约 794 | 需要单独确定更大卡组／分片与成本预算 <a href="#s33">[cite:33]</a> |
 
-这些是 \(2\times\text{参数量}\) 的权重容量推导，不包括训练激活、梯度、LoRA optimizer、cache、临时 logits、allocator 和模型副本。LoRA 减少可训练状态，但冻结的专家权重仍要驻留；量化或 CPU offload 会改变数值与系统条件，应作为独立配置验证。
+这些是 $2\times\text{参数量}$ 的权重容量推导，不包括训练激活、梯度、LoRA optimizer、cache、临时 logits、allocator 和模型副本。LoRA 减少可训练状态，但冻结的专家权重仍要驻留；量化或 CPU offload 会改变数值与系统条件，应作为独立配置验证。
 
-若保存 \(N\) 个样本、\(L\) 层、每样本 \(T\) 个 token、隐藏维度 \(d\)，每个激活元素 \(b\) bytes，则一类完整激活缓存为：
+若保存 $N$ 个样本、$L$ 层、每样本 $T$ 个 token、隐藏维度 $d$，每个激活元素 $b$ bytes，则一类完整激活缓存为：
 
-\[
+$$
 C_{\mathrm{activation}}=N L T d b.
-\]
+$$
 
-教师 full-vocabulary logits 的朴素临时张量为 \(B T V b\)，而不是只随模型参数量变化。chunked projection／loss 可降低相关峰值；若改存 top-k 概率，目标已变成近似，必须记录截断与尾部处理，不能继续称完全相同的 full-vocabulary KL。<a href="#s20">[cite:20]</a>
+教师 full-vocabulary logits 的朴素临时张量为 $B T V b$，而不是只随模型参数量变化。chunked projection／loss 可降低相关峰值；若改存 top-k 概率，目标已变成近似，必须记录截断与尾部处理，不能继续称完全相同的 full-vocabulary KL。<a href="#s20">[cite:20]</a>
 
 小实验统一采用每组 2～4 张 H20，包含加载、短程训练、干预与恢复 pilot。新增卡优先用于独立 seed 与匹配对照；大模型阶段才根据完整容量账本扩大单组。A0 已实际使用 2 张 NVIDIA H20；其他阶段仍是资源规划，不能据此认为已经分配或验证。
 
 总成本按实际运行记录计算：
 
-\[
+$$
 C_{\mathrm{GPU}}=\sum_j n_j\,t_j
-\]
+$$
 
-其中 \(n_j\) 是该阶段实际占用卡数，\(t_j\) 以小时计。包括 teacher scoring、student rollout、训练、归因搜索、验证干预、重训、模型加载和失败重试。CPU 判分、存储和人工审核另列。
+其中 $n_j$ 是该阶段实际占用卡数，$t_j$ 以小时计。包括 teacher scoring、student rollout、训练、归因搜索、验证干预、重训、模型加载和失败重试。CPU 判分、存储和人工审核另列。
 
 主要效率结果是“达到预先冻结质量要求所需的总 GPU·h”，以及“完成一个通过验证的诊断所需的时间和总成本”。纯训练 tokens/s 不能替代两者。优先报告等训练 token 与等总成本两种比较；二者通常不能同时严格相等，应分别设计。
 

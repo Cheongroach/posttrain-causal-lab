@@ -21,7 +21,7 @@ Qwen3.5-4B student 与 Qwen3.5-9B teacher 已完成首轮工程 pilot。真实�
 
 任务使用 1 Worker × 2 NVIDIA H20。GPU 0 运行 FP32 student，GPU 1 运行冻结的 BF16 teacher。LoRA r16／alpha32／dropout0，64 个输出投影 attachment sites，共 9,437,184 个可训练参数。软件为 PyTorch 2.9.1、Transformers 5.2.0、PEFT 0.18.1，使用原生 Torch GDN 和 SDPA。
 
-三个分支都从相同 adapter、optimizer 和 RNG 状态出发，处理相同四个 prompt。KD 和 OPD 均使用完整词表 \(\mathrm{KL}(p_{\mathrm{teacher}}\Vert p_{\mathrm{student}})\)、温度 1、有效响应 token 平均；区别是固定标准答案前缀和学生当轮生成前缀。SFT 使用标准答案 CE。
+三个分支都从相同 adapter、optimizer 和 RNG 状态出发，处理相同四个 prompt。KD 和 OPD 均使用完整词表 $\mathrm{KL}(p_{\mathrm{teacher}}\Vert p_{\mathrm{student}})$、温度 1、有效响应 token 平均；区别是固定标准答案前缀和学生当轮生成前缀。SFT 使用标准答案 CE。
 
 | 分支 | 完整更新 | 有效响应 token 总数 | 最大 adapter 元素更新绝对值 |
 |---|---:|---:|---:|
@@ -39,9 +39,9 @@ PyTorch peak allocated memory：student 19.41 GiB，teacher 16.76 GiB。这是�
 
 按最终 Pod 从 schedule 到 stop 的 392 秒计算，2 卡共约：
 
-\[
+$$
 2\times\frac{392}{3600}=0.218\ \mathrm{GPU\cdot h}
-\]
+$$
 
 此口径包含容器准备、模型复制和结果归档，排队与实验前资产准备另计。模型加载至 pilot 完成为 44.41 秒；单 seed 短程运行不作为吞吐 benchmark。
 
