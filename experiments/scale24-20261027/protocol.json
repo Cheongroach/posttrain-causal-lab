@@ -1,0 +1,66 @@
+{
+  "experiment": "scale24-20261027",
+  "seeds": [
+    20261027,
+    20261028,
+    20261029
+  ],
+  "arms": [
+    "sft",
+    "kd",
+    "opd32",
+    "opd256"
+  ],
+  "workers": 3,
+  "gpu_per_worker": 8,
+  "gpus_per_cell": 2,
+  "total_gpus": 24,
+  "student": "Qwen/Qwen3.5-4B",
+  "teacher": "Qwen/Qwen3.5-9B",
+  "steps_per_cell": 256,
+  "train_rows": 256,
+  "dev_rows": 64,
+  "verification_rows": 64,
+  "loss": "CE or full-vocabulary KL(teacher||student), response-token mean, T=1",
+  "primary_pair": [
+    "opd256",
+    "opd32"
+  ],
+  "primary_metric": "complete_numeric_correct on verification, equal 256-token greedy eval",
+  "secondary_metrics": [
+    "strict_correct",
+    "numeric_correct",
+    "format_valid",
+    "truncated",
+    "output_tokens",
+    "gold_logp_drop_under_base_vs_random_patch"
+  ],
+  "search_rows": 8,
+  "search_split": "dev",
+  "sites": 64,
+  "selection": "top 3 mean gold-logp drop under base donor, lexical tie-break",
+  "verification_sites": 3,
+  "match": "random perturbation with same activation L2 norm",
+  "checkpoint_steps": [
+    64,
+    128,
+    256
+  ],
+  "replay_step": 128,
+  "rollout_budgets": {
+    "opd32": 32,
+    "opd256": 256
+  },
+  "evaluation_budget": 256,
+  "student_dtype": "float32",
+  "teacher_dtype": "bfloat16",
+  "max_sequence": 768,
+  "thinking": false,
+  "learning_rate": 0.0001,
+  "lora_rank": 16,
+  "lora_alpha": 32,
+  "worker_bound_seconds": 10800,
+  "maximum_entrypoint_gpu_hours": 72,
+  "benchmark_test_accessed": false,
+  "scope": "one 24-GPU paired scale jump; no large-parameter model or train-signal repair"
+}

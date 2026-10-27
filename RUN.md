@@ -57,3 +57,9 @@ Transformers 5.2 的 `apply_chat_template(..., tokenize=True)` 默认返回 `Bat
 | 独立复核摘要 | `experiments/a0-20261027-110309/evidence/verification.json` |
 
 只有收齐终态产物并核对上述门禁后，才能给出 A0 通过结论。
+
+## 后续24卡扩展
+
+A0的四个OPD rollout全部触及32-token上限。本次预先指定OPD-256 vs OPD-32，检验输出预算对截断和完整数字正确率的影响。直接从2卡扩大到24卡，采用3个配对seed、4个条件、每cell独占2卡的矩阵；学生仍为4B、教师仍为9B。
+
+设置见 [24-H20 PROTOCOL.md](experiments/scale24-20261027/PROTOCOL.md)。当前已提交排队，没有该轮实测结果。终态须通过 [分析门禁](experiments/scale24-20261027/ANALYSIS.md) 后再报告；A0的工程结论保持原适用范围。

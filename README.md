@@ -6,6 +6,9 @@
 2. [RESEARCH.md](RESEARCH.md)
 3. [RUN.md](RUN.md)
 4. [A0 REPORT.md](experiments/a0-20261027-110309/REPORT.md)
+5. [24-H20冻结协议](experiments/scale24-20261027/PROTOCOL.md) 与 [分析口径](experiments/scale24-20261027/ANALYSIS.md)
+
+24-H20矩阵已提交排队：三配对seed × SFT／KD／OPD-32／OPD-256，每cell两卡、256步。沿用4B／9B，主要检验输出预算改变后的完整数字正确率和固定前缀干预效果；当前没有该轮实测结果。A0的四步结果仍只作为工程门禁证据。
 
 配套图：
 
