@@ -1,0 +1,24 @@
+{
+  "first_step": {
+    "loss": 3.004213571548462,
+    "grad_norm_before_clip": 15.957548141479492,
+    "response_tokens": 6,
+    "prefix_tokens": 90
+  },
+  "reference_next_step": {
+    "loss": 2.9288787841796875,
+    "grad_norm_before_clip": 14.771092414855957,
+    "response_tokens": 6,
+    "prefix_tokens": 110
+  },
+  "replayed_next_step": {
+    "loss": 2.9288787841796875,
+    "grad_norm_before_clip": 14.771092414855957,
+    "response_tokens": 6,
+    "prefix_tokens": 110
+  },
+  "adapter_max_abs": 0.0,
+  "cursor": 1,
+  "optimizer_and_rng_restored": true,
+  "scope": "same-process state replay; excludes cross-machine fault recovery"
+}

@@ -1,0 +1,15 @@
+{
+  "a0_passed": true,
+  "short_arms": [
+    "sft",
+    "kd",
+    "opd"
+  ],
+  "elapsed_seconds": 44.405402429401875,
+  "peak_allocated_bytes": [
+    20839218688,
+    17997700096
+  ],
+  "quality_conclusion": null,
+  "scope": "one seed, four updates per arm, training split only"
+}

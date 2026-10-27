@@ -1,0 +1,143 @@
+{
+  "sft": {
+    "steps": [
+      {
+        "loss": 3.004213571548462,
+        "grad_norm_before_clip": 15.957548141479492,
+        "response_tokens": 6,
+        "prefix_tokens": 90,
+        "objective": "sft",
+        "step": 0,
+        "id": "gsm8k-train-03612",
+        "elapsed_seconds": 0.8051397036761045
+      },
+      {
+        "loss": 2.9288787841796875,
+        "grad_norm_before_clip": 14.771092414855957,
+        "response_tokens": 6,
+        "prefix_tokens": 110,
+        "objective": "sft",
+        "step": 1,
+        "id": "gsm8k-train-01889",
+        "elapsed_seconds": 0.8088016714900732
+      },
+      {
+        "loss": 3.6051597595214844,
+        "grad_norm_before_clip": 27.818344116210938,
+        "response_tokens": 5,
+        "prefix_tokens": 117,
+        "objective": "sft",
+        "step": 2,
+        "id": "gsm8k-train-05000",
+        "elapsed_seconds": 0.7934566587209702
+      },
+      {
+        "loss": 0.9635564684867859,
+        "grad_norm_before_clip": 9.08914566040039,
+        "response_tokens": 5,
+        "prefix_tokens": 74,
+        "objective": "sft",
+        "step": 3,
+        "id": "gsm8k-train-00296",
+        "elapsed_seconds": 0.9030748046934605
+      }
+    ],
+    "adapter_update_max_abs": 0.0004011589626315981,
+    "trained_logit_change_max_abs": 11.476005554199219,
+    "disabled_adapter_max_abs": 0.0
+  },
+  "kd": {
+    "steps": [
+      {
+        "loss": 0.3364940881729126,
+        "grad_norm_before_clip": 16.473783493041992,
+        "response_tokens": 6,
+        "prefix_tokens": 90,
+        "objective": "kd",
+        "step": 0,
+        "id": "gsm8k-train-03612",
+        "elapsed_seconds": 3.407888701185584
+      },
+      {
+        "loss": 0.4902900457382202,
+        "grad_norm_before_clip": 17.913415908813477,
+        "response_tokens": 6,
+        "prefix_tokens": 110,
+        "objective": "kd",
+        "step": 1,
+        "id": "gsm8k-train-01889",
+        "elapsed_seconds": 1.0023994278162718
+      },
+      {
+        "loss": 0.3504203259944916,
+        "grad_norm_before_clip": 9.959744453430176,
+        "response_tokens": 5,
+        "prefix_tokens": 117,
+        "objective": "kd",
+        "step": 2,
+        "id": "gsm8k-train-05000",
+        "elapsed_seconds": 1.0321543142199516
+      },
+      {
+        "loss": 0.2754548490047455,
+        "grad_norm_before_clip": 6.060279369354248,
+        "response_tokens": 5,
+        "prefix_tokens": 74,
+        "objective": "kd",
+        "step": 3,
+        "id": "gsm8k-train-00296",
+        "elapsed_seconds": 1.0063123013824224
+      }
+    ],
+    "adapter_update_max_abs": 0.00040115934098139405,
+    "trained_logit_change_max_abs": 5.991147994995117,
+    "disabled_adapter_max_abs": 0.0
+  },
+  "opd": {
+    "steps": [
+      {
+        "loss": 0.18769121170043945,
+        "grad_norm_before_clip": 3.320378065109253,
+        "response_tokens": 32,
+        "prefix_tokens": 90,
+        "objective": "opd",
+        "step": 0,
+        "id": "gsm8k-train-03612",
+        "elapsed_seconds": 1.1017340067774057
+      },
+      {
+        "loss": 0.12138692289590836,
+        "grad_norm_before_clip": 3.3321316242218018,
+        "response_tokens": 32,
+        "prefix_tokens": 110,
+        "objective": "opd",
+        "step": 1,
+        "id": "gsm8k-train-01889",
+        "elapsed_seconds": 1.2898388747125864
+      },
+      {
+        "loss": 0.06956388056278229,
+        "grad_norm_before_clip": 5.154366493225098,
+        "response_tokens": 32,
+        "prefix_tokens": 117,
+        "objective": "opd",
+        "step": 2,
+        "id": "gsm8k-train-05000",
+        "elapsed_seconds": 1.1669332142919302
+      },
+      {
+        "loss": 0.2321045845746994,
+        "grad_norm_before_clip": 1.803280234336853,
+        "response_tokens": 32,
+        "prefix_tokens": 74,
+        "objective": "opd",
+        "step": 3,
+        "id": "gsm8k-train-00296",
+        "elapsed_seconds": 1.059094088152051
+      }
+    ],
+    "adapter_update_max_abs": 0.0004011472628917545,
+    "trained_logit_change_max_abs": 6.564889430999756,
+    "disabled_adapter_max_abs": 0.0
+  }
+}

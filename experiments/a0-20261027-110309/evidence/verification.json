@@ -1,0 +1,23 @@
+{
+  "a0_passed": true,
+  "source_and_checkpoint_hashes_verified": true,
+  "checkpoints_finite": true,
+  "worker_exit_code": 0,
+  "platform_status": "done",
+  "trial_status": "finished",
+  "gpus": 2,
+  "allocated_seconds_from_schedule_to_stop": 392.0,
+  "gpu_hours_from_pod_interval": 0.21777777777777776,
+  "pytorch_peak_allocated_gib": [
+    19.408034801483154,
+    16.761664390563965
+  ],
+  "completion_tokens": {
+    "sft": 22,
+    "kd": 22,
+    "opd": 128
+  },
+  "opd_rollouts": 4,
+  "opd_truncated": 4,
+  "quality_conclusion": null
+}

@@ -1,0 +1,7 @@
+{
+  "layer": 0,
+  "site": "linear_attn output, all prompt and response positions",
+  "identity_max_abs": 0.0,
+  "restore_max_abs": 0.0,
+  "zero_max_abs": 20.303586959838867
+}
