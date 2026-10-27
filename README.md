@@ -10,13 +10,15 @@
 - SFT、固定前缀 KD、学生前缀 OPD 各完成四步。
 - 四个 OPD rollout 全部触及 32-token 上限；本轮没有模型质量或机制定位结论。
 
+后续24-H20配对矩阵已提交排队，尚无该轮实测结果：3个seed × SFT／KD／OPD-32／OPD-256，每cell两卡、256步，沿用4B／9B。主要比较32→256生成预算改变后的完整数字正确率，并在dev选址后检验verification上的donor与等L2随机干预。设置见 [冻结协议](https://github.com/Cheongroach/posttrain-causal-lab/blob/manuscript/experiments/scale24-20261027/PROTOCOL.md) 和 [分析方法](https://github.com/Cheongroach/posttrain-causal-lab/blob/manuscript/experiments/scale24-20261027/ANALYSIS.md)。
+
 ## 三个分支
 
 | 分支 | 内容 |
 |---|---|
 | [`main`](https://github.com/Cheongroach/posttrain-causal-lab/tree/main) | 项目入口和多 worktree 阅读指引 |
-| [`code`](https://github.com/Cheongroach/posttrain-causal-lab/tree/code) | 核心训练、干预、恢复代码与 CPU 测试 |
-| [`manuscript`](https://github.com/Cheongroach/posttrain-causal-lab/tree/manuscript) | 逐步入门稿、研究手稿、A0 协议、实测报告与图 |
+| [`code`](https://github.com/Cheongroach/posttrain-causal-lab/tree/code) | A0／24卡训练、干预、恢复、结果复核代码与CPU测试 |
+| [`manuscript`](https://github.com/Cheongroach/posttrain-causal-lab/tree/manuscript) | 逐步入门稿、研究手稿、A0实测报告、24卡冻结协议与分析方法 |
 
 推荐不要反复切换分支。按照 [READING_GUIDE.md](READING_GUIDE.md) 用 `git worktree` 把三个分支同时签出到同一项目目录。
 
