@@ -1,0 +1,63 @@
+{
+  "experiment": "length-probe-20261028",
+  "original_experiment": "scale24-20261027",
+  "arms": [
+    "opd32",
+    "opd256"
+  ],
+  "seeds": [
+    20261027,
+    20261028,
+    20261029
+  ],
+  "checkpoints": [
+    64,
+    128,
+    256
+  ],
+  "budgets": [
+    256,
+    512
+  ],
+  "split": "dev",
+  "rows": 64,
+  "dev_sha256": "7eb2643922e6b60f33f22cb1351fd34896259df0fdd268014b1f3ed28f918f18",
+  "max_total_tokens": 1024,
+  "student_dtype": "float32",
+  "model": "Qwen/Qwen3.5-4B",
+  "gpus_per_worker": 2,
+  "workers": 3,
+  "total_gpus": 6,
+  "entrypoint_seconds": 7200,
+  "maximum_entrypoint_gpu_hours": 12,
+  "optimizer_updates": 0,
+  "verification_accessed": false,
+  "benchmark_test_accessed": false,
+  "greedy_prefix_gate": "256-token output must equal the prefix of 512-token output",
+  "reference_gate": "step256 dev/budget256 must exactly reproduce original raw token IDs",
+  "case_rng_probe": "same model/case yields equal 8/16-token sampled prefix; outer CPU/CUDA/Python RNG restored",
+  "claim_scope": "post-hoc length/checkpoint diagnostic; no fresh confirmatory quality result",
+  "input_archives": [
+    {
+      "worker": 0,
+      "name": "input-worker-0.tar.gz",
+      "sha256": "1de134a67e137953e229fb5a0dab089621f7c0bc0274de2de86fa090734f7844",
+      "bytes": 233447714,
+      "snapshot_manifest_sha256": "4b996a2381fa577b40bac11f0c338a42fd78d2c687354d18894a3f7a14633d59"
+    },
+    {
+      "worker": 1,
+      "name": "input-worker-1.tar.gz",
+      "sha256": "8c69a04674cef74b4fc2aa145dabfde14c30b5e5242a44e599a6c47a15c260ce",
+      "bytes": 233453673,
+      "snapshot_manifest_sha256": "c716a6cba2af7a94646bc65b5a1a5765fbfba1acfcc29887c119bba3bef75dca"
+    },
+    {
+      "worker": 2,
+      "name": "input-worker-2.tar.gz",
+      "sha256": "fa5c4d1ff3d89d8a37b35598e39160753771ae0cb664b28c5919c9a272be1b0f",
+      "bytes": 233446045,
+      "snapshot_manifest_sha256": "2f9cb8decce80763e013d0ff817e71d8f96e2861588e2df483b687770d7fba27"
+    }
+  ]
+}
