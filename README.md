@@ -14,6 +14,8 @@
 
 ## 三个分支
 
+正在运行[已有checkpoint的长度诊断](https://github.com/Cheongroach/posttrain-causal-lab/blob/manuscript/experiments/length-probe-20261028/PROTOCOL.md)：6张H20、原dev、64／128／256步checkpoint、256／512-token上限。逐题RNG实现与CPU检查已补齐；本次只做推理和真实CUDA采样契约检查，没有重新训练。
+
 | 分支 | 内容 |
 |---|---|
 | [`main`](https://github.com/Cheongroach/posttrain-causal-lab/tree/main) | 项目入口和多 worktree 阅读指引 |
